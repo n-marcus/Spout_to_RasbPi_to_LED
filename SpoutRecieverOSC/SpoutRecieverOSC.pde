@@ -16,6 +16,9 @@ color pixelcolor;
 int ledLength = 49;
 
 StringList list;
+color[] pixelarray = new color[ledLength];
+
+boolean low_resource = false;
 
 
 // DECLARE A SPOUT OBJECT HERE
@@ -25,8 +28,8 @@ void setup() {
   size(640, 360, OPENGL);
 
   //OSC
-  oscP5 = new OscP5(this, 12001);
-  myRemoteLocation = new NetAddress("127.0.0.1", 12000);
+  oscP5 = new OscP5(this, 12000);
+  myRemoteLocation = new NetAddress("169.254.5.32", 12000);
 
   frame.setResizable(true); // Optionally adapt to sender frame size
   insets = frame.getInsets(); // Get the caption and borders for frame resizing
@@ -34,6 +37,11 @@ void setup() {
 
   // Create an image to receive the data.
   img = createImage(width, height, ARGB);
+
+  //fill the pixel array
+  for (int i = 0; i < ledLength; i ++) { 
+    pixelarray[i] = color(0, 0, 0);
+  }
 
   // CREATE A NEW SPOUT OBJECT HERE
   spout = new Spout();
@@ -47,9 +55,6 @@ void setup() {
 
 void draw() {
   background(0);
-
-
-
   // RECEIVE A SHARED TEXTURE HERE
   img = spout.receiveTexture(img);
 
@@ -57,24 +62,29 @@ void draw() {
   // If the image has been resized, optionally resize the frame to match.
   if (img.width != width || img.height != height && img.width > 0 && img.height > 0) {
     // Reset the frame size - include borders and caption
-    frame.setSize((img.width * 10) + (insets.left + insets.right), (img.height * 10) + (insets.top + insets.bottom));
+    frame.setSize((img.width ) + (insets.left + insets.right), (img.height) + (insets.top + insets.bottom));
   }
 
   // Draw the result
-  image(img, 0, 0, width, height);
+  if (!low_resource) { 
+    image(img, 0, 0, width, height);
+    for (int i = 0; i < ledLength; i++) { // iterate through the frame horizontally and draw dots where the leds will be relatively
+      fill(pixelarray[i]); //get the color from the color array
+      ellipse((width/ledLength) * i, height/2, 10, 10); // draw nice dots
+    }
+  }
 
   setLEDS();
 
-  for (int i = 0; i < ledLength; i++) { // iterate through the frame horizontally and draw dots where the leds will be relatively
-    fill(255);
-    ellipse( (width/ledLength) * i, height/2, 4, 4);
-  }
+
 
   //display the framerate
   textSize(32);
   fill(255);
-  text(frameRate, 10, 40);
-  text(JSpout.GetSenderName(), 200, 40);
+  text(int(frameRate), 10, 40);
+  textSize(12);
+  text(JSpout.GetSenderName(), 70, 20);
+  text("low_resource = " + low_resource, 70, 40);
 }
 
 
@@ -86,6 +96,9 @@ void mousePressed() {
     // the list of all senders running.
     JSpout.SenderDialog();
   }
+  if (mouseButton == LEFT) {
+    low_resource =!low_resource;
+  }
 }
 
 void setLEDS() {
@@ -93,27 +106,35 @@ void setLEDS() {
   String pixelString= "";
   for (int i = 0; i < ledLength; i++) { // iterate through the frame horizontally
     pixelcolor = img.get((img.width/ledLength) * i, img.height/2); // read the color per pixel
-    String r = nf(int(red(pixelcolor)), 3);
-    String g = nf(int(green(pixelcolor)), 3);
-    String b = nf(int(blue(pixelcolor)), 3);
+    String r = nf(int((pixelcolor >> 16) & 0xFF), 3); // these weird number are a faster way of getting the r g and b values of a color
+    String g = nf(int((pixelcolor >> 8) & 0xFF), 3);
+    String b = nf(int(pixelcolor & 0xFF), 3);
+    /*
+    int r = (pixelcolor >> 16) & 0xFF;  // Faster way of getting red(argb)
+    int g = (pixelcolor >> 8) & 0xFF;   // Faster way of getting green(argb)
+    int b = pixelcolor & 0xFF;          // Faster way of getting blue(argb)
+    */
+  
     pixelString = pixelString + r+ g + b;
-
-
+    if (!low_resource) {
+      pixelarray[i] = color(pixelcolor); // this is a local array of colors which holds the current frame for debugging purposes
+    }
     //println(pixelString);
   }
-  //println("Length is " + pixelString.length());
-  //println("sending " + pixelString);
-  
-  //Sending the length of the next frame, so the rasp knows how to deal with this
-  OscMessage oscFrameLength = new OscMessage("/framelength");
-  oscFrame.add(pixelString.length());
-  oscP5.send(oscFrameLength, myRemoteLocation
-  
-  
   //SENDING THE FRAME TO myRemoteLocation
   OscMessage oscFrame = new OscMessage("/frame");
   oscFrame.add(pixelString);
   oscP5.send(oscFrame, myRemoteLocation);
+  fill(255);
+  ellipse(width - 20, 20, 20, 20);
+}
+
+
+void oscEvent(OscMessage theOscMessage) {
+  int confirm;
+  print("### received an osc message.");
+  print(" addrpattern: "+theOscMessage.addrPattern());
+  println(" typetag: "+theOscMessage.typetag());
 }
 
 void exit() {
