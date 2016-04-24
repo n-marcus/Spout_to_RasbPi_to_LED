@@ -1,6 +1,9 @@
 import oscP5.*;
 import netP5.*;
 import java.awt.*; // needed for frame insets
+import controlP5.*;
+
+ControlP5 cp5;
 
 
 Insets insets; // Frame caption and borders for resizing
@@ -16,8 +19,8 @@ color pixelcolor;
 int ledLength = 49;
 
 StringList list;
-color[] pixelarray = new color[ledLength];
-PVector[] positions = new PVector[ledLength];
+color[] pixelarray = new color[100];
+PVector[] positions = new PVector[100];
 
 boolean low_resource = false;
 
@@ -26,18 +29,34 @@ boolean low_resource = false;
 Spout spout;
 
 void setup() {
+
+
   size(640, 360, OPENGL);
 
   //OSC
   oscP5 = new OscP5(this, 12000);
   myRemoteLocation = new NetAddress("169.254.5.32", 12000);
-
+  // 169.254.5.32 = rasp ip
   frame.setResizable(true); // Optionally adapt to sender frame size
   insets = frame.getInsets(); // Get the caption and borders for frame resizing
+
   background(0);
+
+  cp5 = new ControlP5(this);
+
+  cp5.addNumberbox("ledLength")
+    .setPosition(10, 50)
+      .setSize(100, 20)
+        .setScrollSensitivity(2)
+          .setValue(50)
+            .setRange(0, 99)
+              ;
+
 
   // Create an image to receive the data.
   img = createImage(width, height, ARGB);
+
+  println("Number of leds set to: " + ledLength);
 
   //fill the pixel array
   for (int i = 0; i < ledLength; i ++) { 
@@ -49,7 +68,6 @@ void setup() {
     float y = (cos(phase)) * (height/4); //mapping it to from 0 to height
     x += width/2;
     y += height/2;
-
     positions[i] = new PVector(x, y);
     //println(positions[i].x + " , " + positions[i].y);
   }
@@ -72,14 +90,9 @@ void draw() {
   img = spout.receiveTexture(img);
 
   if (mousePressed && mouseButton == LEFT) {
-    updateCircle();
+    updateCircle(); // if you click and drag you can make the circle bigger or smaller
   }
 
-  /*for (int i = 0; i < ledLength; i ++) { 
-    fill(255);
-    ellipse(positions[i].x, positions[i].y, 10, 10);
-  }
-  */
   // If the image has been resized, optionally resize the frame to match.
   if (img.width != width || img.height != height && img.width > 0 && img.height > 0) {
     // Reset the frame size - include borders and caption
@@ -91,9 +104,14 @@ void draw() {
     image(img, 0, 0, width, height);
     for (int i = 0; i < ledLength; i++) { // iterate through the frame horizontally and draw dots where the leds will be relatively
       fill(pixelarray[i]); //get the color from the color array
+
+      if (mousePressed && mouseButton == LEFT) {
+        fill(255); //if you are changing the size of the circle make the dots white
+      }
       ellipse((int)positions[i].x, (int) positions[i].y, 10, 10); // draw nice dots
     }
   }
+
 
   setLEDS();
 
@@ -146,7 +164,6 @@ void setLEDS() {
   OscMessage oscFrame = new OscMessage("/frame");
   oscFrame.add(pixelString);
   oscP5.send(oscFrame, myRemoteLocation);
-  
 }
 
 
