@@ -17,6 +17,7 @@ int ledLength = 49;
 
 StringList list;
 color[] pixelarray = new color[ledLength];
+PVector[] positions = new PVector[ledLength];
 
 boolean low_resource = false;
 
@@ -41,7 +42,19 @@ void setup() {
   //fill the pixel array
   for (int i = 0; i < ledLength; i ++) { 
     pixelarray[i] = color(0, 0, 0);
+    //positions[i] = new PVector((width/ledLength) * i, height/2); //linear spreading
+    float phase = ((float)(i + 1)/ (float) ledLength); //getting a number from 0.0 to 1.0 based on i and ledLength
+    phase *= TWO_PI;
+    float x = (sin(phase)) * (height/4); //mapping it to from 0 to height
+    float y = (cos(phase)) * (height/4); //mapping it to from 0 to height
+    x += width/2;
+    y += height/2;
+
+    positions[i] = new PVector(x, y);
+    //println(positions[i].x + " , " + positions[i].y);
   }
+
+
 
   // CREATE A NEW SPOUT OBJECT HERE
   spout = new Spout();
@@ -57,6 +70,15 @@ void draw() {
   background(0);
   // RECEIVE A SHARED TEXTURE HERE
   img = spout.receiveTexture(img);
+
+  if (mousePressed && mouseButton == LEFT) {
+    updateCircle();
+  }
+
+  for (int i = 0; i < ledLength; i ++) { 
+    fill(255);
+    ellipse(positions[i].x, positions[i].y, 10, 10);
+  }
 
 
   // If the image has been resized, optionally resize the frame to match.
@@ -97,7 +119,7 @@ void mousePressed() {
     JSpout.SenderDialog();
   }
   if (mouseButton == LEFT) {
-    low_resource =!low_resource;
+    //low_resource =!low_resource;
   }
 }
 
@@ -111,10 +133,10 @@ void setLEDS() {
     String b = nf(int(pixelcolor & 0xFF), 3);
     /*
     int r = (pixelcolor >> 16) & 0xFF;  // Faster way of getting red(argb)
-    int g = (pixelcolor >> 8) & 0xFF;   // Faster way of getting green(argb)
-    int b = pixelcolor & 0xFF;          // Faster way of getting blue(argb)
-    */
-  
+     int g = (pixelcolor >> 8) & 0xFF;   // Faster way of getting green(argb)
+     int b = pixelcolor & 0xFF;          // Faster way of getting blue(argb)
+     */
+
     pixelString = pixelString + r+ g + b;
     if (!low_resource) {
       pixelarray[i] = color(pixelcolor); // this is a local array of colors which holds the current frame for debugging purposes
@@ -142,4 +164,19 @@ void exit() {
   spout.closeReceiver();
   super.exit();
 } 
+
+void updateCircle() {
+  for (int i = 0; i < ledLength; i ++) { 
+    pixelarray[i] = color(0, 0, 0);
+    float phase = ((float)(i + 1)/ (float) ledLength); //getting a number from 0.0 to 1.0 based on i and ledLength
+    phase *= TWO_PI;
+    float x = (sin(phase)) * (mouseX); //mapping it to from 0 to height
+    float y = (cos(phase)) * (mouseX); //mapping it to from 0 to height
+    x += width/2;
+    y += height/2;
+
+    positions[i] = new PVector(x, y);
+    //println(positions[i].x + " , " + positions[i].y);
+  }
+}
 
