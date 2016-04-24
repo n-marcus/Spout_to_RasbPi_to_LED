@@ -11,6 +11,8 @@ NetAddress myRemoteLocation;
 int i = 0;
 
 color pixelcolor;
+PFont font;
+
 
 int ledLength = 49;
 
@@ -53,6 +55,7 @@ void setup() {
   // Create an image to receive the data.
   img = createImage(width, height, ARGB);
 
+  font = loadFont("ArialMT-48.vlw");
 
   //fill the pixel array
   for (int i = 0; i < ledLength; i ++) { 
@@ -105,13 +108,18 @@ void draw() {
   if (!low_resource) { 
     image(img, 0, 0, width, height);
     for (int i = 0; i < ledLength; i++) { // iterate through the frame horizontally and draw dots where the leds will be relatively
-      fill(pixelarray[i]); //get the color from the color array
+      PVector pos = positions.get(i);
 
+      fill(pixelarray[i]); //get the color from the color array
       if (mousePressed && mouseButton == LEFT) {
         fill(255); //if you are changing the size of the circle make the dots white
       }
-      PVector pos = positions.get(i);
-      ellipse(pos.x * scaling + (width/2), pos.y * scaling + (height/2), 10, 10); // draw nice dots
+      ellipseMode(CENTER);
+      ellipse(pos.x * scaling + (width/2) + 10, pos.y * scaling + (height/2), 10, 10); // draw nice dots
+      //What number are we working with?
+      fill(0);
+      textFont(font, 12);
+      text(i, pos.x * scaling + (width/2) + 10, pos.y * scaling + (height/2));
     }
   }
 
@@ -121,10 +129,10 @@ void draw() {
 
 
   //display the framerate
-  textSize(32);
   fill(255);
+  textFont(font, 32);
   text(int(frameRate), 10, 40);
-  textSize(12);
+  textFont(font, 16);
   text(JSpout.GetSenderName(), 70, 20);
   text("low_resource = " + low_resource, 70, 40);
 }
