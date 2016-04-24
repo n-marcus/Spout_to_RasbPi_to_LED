@@ -1,10 +1,6 @@
 import oscP5.*;
 import netP5.*;
 import java.awt.*; // needed for frame insets
-import controlP5.*;
-
-ControlP5 cp5;
-
 
 Insets insets; // Frame caption and borders for resizing
 PImage img;
@@ -19,10 +15,21 @@ color pixelcolor;
 int ledLength = 49;
 
 StringList list;
+
 color[] pixelarray = new color[100];
-PVector[] positions = new PVector[100];
+//PVector[] positions = new PVector[100];
 
 boolean low_resource = false;
+
+///////////////////////////
+////////RATIOS////////////
+//////////////////////////
+float[] data;
+ArrayList<PVector> positions = new ArrayList<PVector>();
+int scaling = 200;
+
+// Load text file as a string
+
 
 
 // DECLARE A SPOUT OBJECT HERE
@@ -42,36 +49,31 @@ void setup() {
 
   background(0);
 
-  cp5 = new ControlP5(this);
-
-  cp5.addNumberbox("ledLength")
-    .setPosition(10, 50)
-      .setSize(100, 20)
-        .setScrollSensitivity(2)
-          .setValue(50)
-            .setRange(0, 99)
-              ;
-
 
   // Create an image to receive the data.
   img = createImage(width, height, ARGB);
 
-  println("Number of leds set to: " + ledLength);
 
   //fill the pixel array
   for (int i = 0; i < ledLength; i ++) { 
     pixelarray[i] = color(0, 0, 0);
-    //positions[i] = new PVector((width/ledLength) * i, height/2); //linear spreading
-    float phase = ((float)(i + 1)/ (float) ledLength); //getting a number from 0.0 to 1.0 based on i and ledLength
-    phase *= TWO_PI;
-    float x = (sin(phase)) * (height/4); //mapping it to from 0 to height
-    float y = (cos(phase)) * (height/4); //mapping it to from 0 to height
-    x += width/2;
-    y += height/2;
-    positions[i] = new PVector(x, y);
-    //println(positions[i].x + " , " + positions[i].y);
   }
 
+  String[] stuff = loadStrings("positions.txt");
+  ledLength = stuff.length;
+  println("Number of leds set to: " + ledLength);
+  // Convert string into an array of integers using ',' as a delimiter
+  for (int i = 0; i < stuff.length; i ++) {
+    data = float((split(stuff[i], ',')));
+    positions.add(new PVector(data[0] - 0.5, data[1] - 0.5));
+  }
+  println(positions);
+
+
+  for (PVector p : positions) { //advanced for loop
+    fill(255);
+    ellipse(p.x * height + (height/2), p.y * height + (height/2), 4, 4); //getting the points, centering them and scaling them to mouse positions
+  }
 
 
   // CREATE A NEW SPOUT OBJECT HERE
@@ -90,7 +92,7 @@ void draw() {
   img = spout.receiveTexture(img);
 
   if (mousePressed && mouseButton == LEFT) {
-    updateCircle(); // if you click and drag you can make the circle bigger or smaller
+    scaling = mouseX;// if you click and drag you can make the circle bigger or smaller
   }
 
   // If the image has been resized, optionally resize the frame to match.
@@ -108,12 +110,13 @@ void draw() {
       if (mousePressed && mouseButton == LEFT) {
         fill(255); //if you are changing the size of the circle make the dots white
       }
-      ellipse((int)positions[i].x, (int) positions[i].y, 10, 10); // draw nice dots
+      PVector pos = positions.get(i);
+      ellipse(pos.x * scaling + (width/2), pos.y * scaling + (height/2), 10, 10); // draw nice dots
     }
   }
 
 
-  setLEDS();
+  setLEDS(); // the core of it allll
 
 
 
@@ -143,23 +146,18 @@ void mousePressed() {
 void setLEDS() {
   //OscMessage pixelString = new OscMessage("/frame");
   String pixelString= "";
-  for (int i = 0; i < ledLength; i++) { // iterate through the frame horizontally
-    pixelcolor = img.get((int)positions[i].x, (int) positions[i].y); // read the color per pixel
+  int index = 0;
+  for (PVector p : positions) { //advanced for loop
+    pixelcolor = img.get(int(p.x * scaling + (width/2)), int(  p.y * scaling + (height/2))); // read the color per pixel
     String r = nf(int((pixelcolor >> 16) & 0xFF), 3); // these weird number are a faster way of getting the r g and b values of a color
     String g = nf(int((pixelcolor >> 8) & 0xFF), 3);
     String b = nf(int(pixelcolor & 0xFF), 3);
-    /*
-    int r = (pixelcolor >> 16) & 0xFF;  // Faster way of getting red(argb)
-     int g = (pixelcolor >> 8) & 0xFF;   // Faster way of getting green(argb)
-     int b = pixelcolor & 0xFF;          // Faster way of getting blue(argb)
-     */
-
     pixelString = pixelString + r+ g + b;
-    if (!low_resource) {
-      pixelarray[i] = color(pixelcolor); // this is a local array of colors which holds the current frame for debugging purposes
-    }
-    //println(pixelString);
+    pixelarray[index] = color(pixelcolor); // this is a local array of colors which holds the current frame for debugging purposes
+    //println(index);
+    index ++;
   }
+
   //SENDING THE FRAME TO myRemoteLocation
   OscMessage oscFrame = new OscMessage("/frame");
   oscFrame.add(pixelString);
@@ -179,19 +177,4 @@ void exit() {
   spout.closeReceiver();
   super.exit();
 } 
-
-void updateCircle() {
-  for (int i = 0; i < ledLength; i ++) { 
-    pixelarray[i] = color(0, 0, 0);
-    float phase = ((float)(i + 1)/ (float) ledLength); //getting a number from 0.0 to 1.0 based on i and ledLength
-    phase *= TWO_PI;
-    float x = (sin(phase)) * (mouseX); //mapping it to from 0 to height
-    float y = (cos(phase)) * (mouseX); //mapping it to from 0 to height
-    x += width/2;
-    y += height/2;
-
-    positions[i] = new PVector(x, y);
-    //println(positions[i].x + " , " + positions[i].y);
-  }
-}
 
