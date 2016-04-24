@@ -75,12 +75,11 @@ void draw() {
     updateCircle();
   }
 
-  for (int i = 0; i < ledLength; i ++) { 
+  /*for (int i = 0; i < ledLength; i ++) { 
     fill(255);
     ellipse(positions[i].x, positions[i].y, 10, 10);
   }
-
-
+  */
   // If the image has been resized, optionally resize the frame to match.
   if (img.width != width || img.height != height && img.width > 0 && img.height > 0) {
     // Reset the frame size - include borders and caption
@@ -92,7 +91,7 @@ void draw() {
     image(img, 0, 0, width, height);
     for (int i = 0; i < ledLength; i++) { // iterate through the frame horizontally and draw dots where the leds will be relatively
       fill(pixelarray[i]); //get the color from the color array
-      ellipse((width/ledLength) * i, height/2, 10, 10); // draw nice dots
+      ellipse((int)positions[i].x, (int) positions[i].y, 10, 10); // draw nice dots
     }
   }
 
@@ -127,7 +126,7 @@ void setLEDS() {
   //OscMessage pixelString = new OscMessage("/frame");
   String pixelString= "";
   for (int i = 0; i < ledLength; i++) { // iterate through the frame horizontally
-    pixelcolor = img.get((img.width/ledLength) * i, img.height/2); // read the color per pixel
+    pixelcolor = img.get((int)positions[i].x, (int) positions[i].y); // read the color per pixel
     String r = nf(int((pixelcolor >> 16) & 0xFF), 3); // these weird number are a faster way of getting the r g and b values of a color
     String g = nf(int((pixelcolor >> 8) & 0xFF), 3);
     String b = nf(int(pixelcolor & 0xFF), 3);
@@ -147,8 +146,7 @@ void setLEDS() {
   OscMessage oscFrame = new OscMessage("/frame");
   oscFrame.add(pixelString);
   oscP5.send(oscFrame, myRemoteLocation);
-  fill(255);
-  ellipse(width - 20, 20, 20, 20);
+  
 }
 
 
