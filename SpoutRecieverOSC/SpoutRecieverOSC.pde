@@ -187,6 +187,18 @@ void oscEvent(OscMessage theOscMessage) {
 }
 
 void exit() {
+  //////////////////////////////
+  // making the pixels black ///
+  //////////////////////////////
+  String pixelString= "";
+  for (PVector p : positions) { //advanced for loop
+    pixelString = pixelString + "000000000"; //recursive formatting
+  }
+  //SENDING THE FRAME TO myRemoteLocation
+  OscMessage oscFrame = new OscMessage("/frame");
+  oscFrame.add(pixelString);
+  oscP5.send(oscFrame, myRemoteLocation);
+
   // CLOSE THE SPOUT RECEIVER HERE
   spout.closeReceiver();
   super.exit();
