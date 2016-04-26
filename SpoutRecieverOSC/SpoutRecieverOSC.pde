@@ -30,6 +30,8 @@ int ledLength = 49;
 color pixelcolor;
 color[] pixelarray = new color[100];
 boolean low_resource = false;
+boolean mirrored = false;
+int y_offset, x_offset;
 
 ///////////////////////////
 ////////RATIOS////////////
@@ -41,6 +43,7 @@ int scaling = 200;
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
   size(640, 360, OPENGL);
@@ -104,24 +107,28 @@ void draw() {
   }
 
   // Draw the result to nice circles
+
   if (!low_resource) { 
-    image(img, 0, 0, width, height);  //draw the recieved frame 
-    for (int i = 0; i < ledLength; i++) { // iterate through the frame horizontally and draw dots where the leds will be relatively
-      PVector pos = positions.get(i); // because we use an ArrayList we have to make a temporary object
-      fill(pixelarray[i]); //get the color from the color array
-      if (mousePressed && mouseButton == LEFT) fill(255); //if you are changing the size of the circle make the dots white
-      ellipseMode(CENTER);
-
-      ///// Drawing the dots//////////
-      ellipse(pos.x * scaling + (width/2) + 10, pos.y * scaling + (height/2), 10, 10); // draw nice dots
-      ///////////////////////////////
-
-      //What number are we working with?
-      fill(0);
-      textFont(font, 12);
-      text(i, pos.x * scaling + (width/2) + 10, pos.y * scaling + (height/2));
-    }
+    image(img, 0, 0, width, height);  //draw the recieved frame
   }
+  /*
+   for (int i = 0; i < ledLength; i++) { // iterate through the frame horizontally and draw dots where the leds will be relatively
+   PVector pos = positions.get(i); // because we use an ArrayList we have to make a temporary object
+   fill(pixelarray[i]); //get the color from the color array
+   if (mousePressed && mouseButton == LEFT) fill(255); //if you are changing the size of the circle make the dots white
+   ellipseMode(CENTER);
+   
+   ///// Drawing the dots//////////
+   ellipse(pos.x * scaling + (width/2) + 10, pos.y * scaling + (height/2), 10, 10); // draw nice dots
+   ///////////////////////////////
+   
+   //What number are we working with?
+   fill(0);
+   textFont(font, 12);
+   text(i, pos.x * scaling + (width/2) + 10, pos.y * scaling + (height/2));
+   }
+   }
+   */
 
 
   //////////////////////////////////////////
@@ -139,7 +146,7 @@ void draw() {
   text(int(frameRate), 10, 40);
   textFont(font, 16);
   text(JSpout.GetSenderName(), 70, 20);
-  text("low_resource = " + low_resource, 70, 40);
+  text("low_resource = " + low_resource + "   mirror = " + mirrored, 70, 40);
 }
 
 
@@ -159,16 +166,36 @@ void mousePressed() {
 void getColors() {
   // This function looks at the coordinates of the points, gets the colors on those points 
   // It than makes a nice long string of all those colors and sends them to somewhere over OSC 
+  // It also draws dots on the points it analyses
   String pixelString= "";
   int index = 0;
   for (PVector p : positions) { //advanced for loop
-    pixelcolor = img.get(int(p.x * scaling + (width/2)), int(  p.y * scaling + (height/2))); // read the color per pixel
+    PVector abs_pos;
+    if (!mirrored) { //get non-mirrored positions
+      abs_pos = new PVector(int(p.x * scaling + (width/2)) + x_offset, int(  p.y * scaling + (height/2)) + y_offset);
+    } else { //if the picture has to be mirrored
+      abs_pos = new PVector(int(p.x * (-scaling) + (width/2) + x_offset), int(  p.y * scaling + (height/2)) + y_offset);
+    }
+
+    ////////////////////READING AND FORMATTING THE COLOR \\\\\\\\\\\\\\\\\\\\\\\\\\\
+    pixelcolor = img.get(int(abs_pos.x), int( abs_pos.y)); // read the color per pixel
     String r = nf(int((pixelcolor >> 16) & 0xFF), 3); // these weird number are a faster way of getting the r g and b values of a color
     String g = nf(int((pixelcolor >> 8) & 0xFF), 3);
     String b = nf(int(pixelcolor & 0xFF), 3);
     pixelString = pixelString + r+ g + b; //recursive formatting
     pixelarray[index] = color(pixelcolor); // this is a local array of colors which holds the current frame for debugging purposes
-    //println(index);
+
+    fill(pixelarray[index]); //get the color from the color array
+    if (mousePressed && mouseButton == LEFT) fill(255); //if you are changing the size of the circle make the dots white
+    ellipseMode(CENTER);
+    ///// Drawing the dots//////////
+    ellipse(abs_pos.x, abs_pos.y, 10, 10); // draw nice dots
+    ///////////////////////////////
+
+    //What number are we working with?
+    fill(0);
+    textFont(font, 12);
+    text(index, abs_pos.x + 10, abs_pos.y);
     index ++;
   }
 
@@ -185,6 +212,34 @@ void oscEvent(OscMessage theOscMessage) {
   print(" addrpattern: "+theOscMessage.addrPattern());
   println(" typetag: "+theOscMessage.typetag());
 }
+
+void keyPressed() {
+  if (key == 'm') {
+    mirrored = !mirrored;
+  } else if (key == 'r') {
+    x_offset = 0;
+    y_offset = 0;
+    scaling = 200;
+    mirrored = false;
+  }
+
+  if (key == CODED) {
+    if (keyCode == UP) {
+      y_offset --;
+      println("y_offset = " + y_offset);
+    } else if (keyCode == DOWN) {
+      y_offset ++;
+      println("y_offset = " + y_offset);
+    } else if (keyCode == RIGHT) {
+      x_offset ++;
+      println("x_offset = " + x_offset);
+    } else if (keyCode == LEFT) {
+      x_offset --;
+      println("_offset = " + x_offset);
+    }
+  }
+}
+
 
 void exit() {
   //////////////////////////////
