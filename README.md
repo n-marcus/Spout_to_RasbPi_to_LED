@@ -6,6 +6,9 @@ Recieves images from any Spout-able application, samples pixels from it and send
 
 #Spout Reciever OSC
 Recieves images from any Spout-able application and sends them over OSC to any client which will then hopefully have some LEDs and a FadeCandy to display these images.
+By pressing the right mouse button you can specify which Spout source to use. This source has to be created first, this seems to be a Spout issue.
+Using the positions.txt file you can specify the points it has to analyse. These have to range from 0.0 to 1.0 and seperated with a ','. These number specify the relative position of the points based on the size of the current window.
+You can adjust the size of the analysis by clicking and dragging the mouse. To move the analysis use the arrow buttons. Use m to mirror the whole analysis and press r to reset the positions.
 
 #OSC Reciever FadeCandy
 Recieves OSC messages from "Spout Reciever OSC" application and transforms them into FadeCandy language
