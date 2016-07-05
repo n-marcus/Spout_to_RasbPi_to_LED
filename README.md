@@ -1,7 +1,8 @@
 # Spout_to_RasbPi_to_LED
 A series of processing sketches that allow you to stream video your PC to a Raspberry Pi and display the video on LED's connected to your Raspberry Pi
 
-https://vimeo.com/173333338
+<iframe src="https://player.vimeo.com/video/173333338" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<p><a href="https://vimeo.com/173333338">TORUS | Visual Music Installation</a> from <a href="https://vimeo.com/ridwann">Ridwan Nasruddin</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
 
 # Spout Reciever Fade Candy
 - Mostly for testing directly from PC to FadeCandy
