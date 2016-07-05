@@ -3,8 +3,8 @@ A series of processing sketches that allow you to stream video your PC to a Rasp
 
 ![alt tag](http://i.imgur.com/tQobUVb.jpg)
 
-<iframe src="https://player.vimeo.com/video/173333338" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-<p><a href="https://vimeo.com/173333338">TORUS | Visual Music Installation</a> from <a href="https://vimeo.com/ridwann">Ridwan Nasruddin</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
+!!! VIDEO !!! 
+https://vimeo.com/173333338
 
 # Spout Reciever Fade Candy
 - Mostly for testing directly from PC to FadeCandy
